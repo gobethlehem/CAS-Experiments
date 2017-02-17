@@ -3,11 +3,15 @@
        xmlns:sec="http://www.springframework.org/schema/security"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-                        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.0.xsd">
+                        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
     <sec:http entry-point-ref="casProcessingFilterEntryPoint">
-        <sec:intercept-url pattern="/secure/**" access="ROLE_USER"/>
+        <sec:intercept-url pattern="/secure/**" access="hasRole('ROLE_USER')"/>
         <sec:logout logout-success-url="/cas-logout.jsp"/>
-        <sec:custom-filter ref="casAuthenticationFilter" after="CAS_FILTER"/>
+        <sec:custom-filter ref="casAuthenticationFilter" position="CAS_FILTER"/>
+        <sec:csrf disabled="true" />
+		<sec:headers>
+        	<sec:frame-options policy="SAMEORIGIN"/>
+    	</sec:headers>
     </sec:http>
 
     <sec:authentication-manager alias="authenticationManager">
@@ -32,7 +36,7 @@
     </bean>
 
     <bean id="casProcessingFilterEntryPoint" class="org.springframework.security.cas.web.CasAuthenticationEntryPoint">
-        <property name="loginUrl" value="https://localhost:8443/cas/login"/>
+        <property name="loginUrl" value="https://sso.lifengyun.com:8443/cas/login"/>
         <property name="serviceProperties" ref="serviceProperties"/>
     </bean>
 
@@ -41,24 +45,24 @@
         <property name="userDetailsService" ref="userService"/>
         <property name="serviceProperties" ref="serviceProperties"/>
         <property name="ticketValidator">
-            <bean class="org.jasig.cas.client.validation.Cas20ServiceTicketValidator">
-                <constructor-arg index="0" value="https://localhost:8443/cas"/>
+            <bean class="org.jasig.cas.client.validation.Cas20ProxyTicketValidator">
+                <constructor-arg index="0" value="https://sso.lifengyun.com:8443/cas"/>
                 <property name="proxyGrantingTicketStorage" ref="proxyGrantingTicketStorage"/>
-                <property name="proxyCallbackUrl" value="https://localhost:8443/user/secure/receptor"/>
+                <property name="proxyCallbackUrl" value="https://sso.lifengyun.com:8443/user/secure/receptor"/>
             </bean>
         </property>
-        <property name="key" value="an_id_for_this_auth_provider_only"/>
+        <property name="key" value="user_auth_provider"/>
     </bean>
 
     <bean id="proxyGrantingTicketStorage" class="org.jasig.cas.client.proxy.ProxyGrantingTicketStorageImpl"/>
 
     <bean id="serviceProperties" class="org.springframework.security.cas.ServiceProperties">
-        <property name="service" value="https://localhost:8443/user/j_spring_cas_security_check"/>
+        <property name="service" value="http://localhost:8080/user/login/cas"/>
         <property name="sendRenew" value="false"/>
     </bean>
 
     <sec:user-service id="userService">
-        <sec:user name="tklotz" password="tklotz" authorities="ROLE_USER"/>
+        <sec:user name="castest_admin" password="123456" authorities="ROLE_USER"/>
         <sec:user name="uday" password="uday" authorities="ROLE_USER"/>
     </sec:user-service>
 </beans>
